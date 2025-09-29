@@ -7,6 +7,9 @@ file(GLOB_RECURSE PRIVATE_SOURCES "Private/*.cpp")
 
 add_executable(EventManagement main.cpp
         ${PRIVATE_SOURCES}
+        AStar/AStar.cpp
+        AStar/AStar.h
+        AStar/Matrix.h
 )
 
 target_include_directories(EventManagement
