@@ -9,6 +9,7 @@ add_executable(EventManagement main.cpp
         ${PRIVATE_SOURCES}
         AStar/Matrix.h
         AStar/AStarMatrix.h
+        GlobalUtils/GlobalUtils.h
 )
 
 target_include_directories(EventManagement
