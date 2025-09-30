@@ -78,7 +78,8 @@ public:
     void FindWay();
 
 private:
-    std::pair<int, int> Start, End;
+    std::pair<int, int> Start = {-1, -1}, End = {-1, -1};
+    bool Initialized = false;
 
     void LoadDefaultMatrix();
 };
@@ -96,10 +97,10 @@ inline AStarMatrix::AStarMatrix(int InRow, int InCol, const std::pair<int, int> 
 
 inline void AStarMatrix::LoadDefaultMatrix() {
     const char *DefaultMatrix[] = {
-        "****###*****####*****###*****###",
+        "S***###*****####*****###*****###",
         "#*#*#*#*###*#**#*###*#*#*###*#**",
         "#*#*#*#*#***#**#*#***#*#*#***#**",
-        "#*#*#*#*#*#####*#*#####*#*#####*",
+        "#*#*#*#*#########*#####*#*#####*",
         "#*#*#*#*#*****#*#*****#*#*****#*",
         "#*#*#*#*####*#*#*####*#*#*####*#",
         "#*#*#*#*****#*#*#*****#*#*#*****",
@@ -109,7 +110,7 @@ inline void AStarMatrix::LoadDefaultMatrix() {
         "#*#*****#*#*#*#*#*#*#*****#*#*#*",
         "#*#####*#*#*#*#*#*#*#*#*###*#*#*",
         "#*****#*#*#*#*#*#*#*#*#*#***#*#*",
-        "####*#*#*#*#*#*#*#*#*#*#*#####*#",
+        "####*#*#*#*#*#**#*##*#*#*#####*#",
         "#***#*#*#*#*#*#*#*#*#*#*#*****#*",
         "#*###*#*#*#*#*#*#*#*#*#*#*####*#",
         "#*#***#*#*#*#*#*#*#*#*#*#*****#*",
@@ -119,14 +120,14 @@ inline void AStarMatrix::LoadDefaultMatrix() {
         "#*#*#*#***#*#*#*#*#*#*****#*#*#*",
         "#*#*#*#*###*#*#*#*#*####*#*#*#*#",
         "#*#*#*#*#***#*#*#*#*****#*#*#*#*",
-        "#*#*#*#*#*###*#*#*####*#*#*#*#*#",
+        "#*#*#*#*#*###*#*#*######*#*#*#*#",
         "#*#*#*#*#*#***#*#*****#*#*#*#*#*",
         "#*#*#*#*#*#*###*#######*#*#*#*#*",
-        "#*#*#*#*#*#*#*******E#*#*#*#*#*#",
+        "#*#*#*#*#*#*#********#*#*#*#*#*#",
         "#*#*#*#*#*############*#*#*#*#*#",
-        "#*#*#*#*#*#S***********#*#*#*#*#",
+        "#*#*#*#*#*#************#*#*#*#*#",
         "#*#*#*#*#*##############*#*#*#*#",
-        "#*#*#*#*#****************#*#*#*#",
+        "#*#*#*#*#****************#*#*#E#",
         "################################"
     };
 
@@ -136,17 +137,40 @@ inline void AStarMatrix::LoadDefaultMatrix() {
     for (int i = 0; i < 32; i++)
         for (int j = 0; j < 32; j++) {
             SetAt(i, j, DefaultMatrix[i][j]);
-            if (DefaultMatrix[i][j] == 'S') Start = {i, j};
-            if (DefaultMatrix[i][j] == 'E') End = {i, j};
+            if (DefaultMatrix[i][j] == 'S') {
+                if (Start != pair(-1, -1)) {
+                    LogManagement::GetInstance()->Error("multiple starts detected, already abort", "AStarMatrix");
+                    return;
+                }
+                Start = {i, j};
+            }
+            if (DefaultMatrix[i][j] == 'E') {
+                if (End != pair(-1, -1)) {
+                    LogManagement::GetInstance()->Error("multiple ends detected, already abort", "AStarMatrix");
+                    return;
+                }
+                End = {i, j};
+            }
         }
+
+    if (Start == pair(-1, -1) || End == pair(-1, -1)) {
+        LogManagement::GetInstance()->Error("start or end were initialized correctly, exit", "AStarMatrix");
+        return;
+    }
+
+    Initialized = true;
 }
 
 
-void setColor(int color) {
+inline void setColor(const int color) {
     SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), color);
 }
 
 inline void AStarMatrix::ShowMatrix() {
+    if (!Initialized) {
+        LogManagement::GetInstance()->Error("not initialized, will not show the Matrix", "AStarMatrix");
+        return;
+    }
     for (int i = 0; i < Size; i++) {
         const auto Element = *GetAt(i / Col, i % Col);
         if (Element == '*') {
@@ -170,11 +194,15 @@ inline void AStarMatrix::ShowMatrix() {
 }
 
 inline void AStarMatrix::FindWay() {
+    if (!Initialized) {
+        LogManagement::GetInstance()->Error("not initialized, will not perform the way finding", "AStarMatrix");
+        return;
+    }
     const auto StartTime = high_resolution_clock::now();
     cout << "Finding Way ..." << endl;
     priority_queue<State, vector<State>, std::greater<> > StateQueue;
     unordered_set<State, StateHash> VisitedStates;
-    const State StartState{Start, Start, Start, End, sqrt(Row * Row + Col * Col), {Start}, 0};
+    const State StartState{Start, Start, Start, End, static_cast<float>(sqrt(Row * Row + Col * Col)), {Start}, 0};
     StateQueue.push(StartState);
     VisitedStates.insert(StartState);
 
