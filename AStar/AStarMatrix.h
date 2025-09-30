@@ -64,15 +64,8 @@ struct StateHash {
     size_t operator()(const State &s) const {
         size_t h1 = hash<int>{}(s.CurPosition.first);
         size_t h2 = hash<int>{}(s.CurPosition.second);
-        return h1 ^ (h2 << 1); // 或者 h1 ^ (h2 >> 1)
+        return h1 ^ (h2 << 1);
     }
-};
-
-enum NextDirection {
-    Right = 1,
-    Left = -1,
-    Up = -1,
-    Down = 1
 };
 
 class AStarMatrix : public Matrix<char> {
@@ -88,9 +81,6 @@ private:
     std::pair<int, int> Start, End;
 
     void LoadDefaultMatrix();
-
-    NextDirection NextVertical = Up;
-    NextDirection NextHorizontal = Right;
 };
 
 inline AStarMatrix::AStarMatrix(int InRow, int InCol, const std::pair<int, int> &InStart,
