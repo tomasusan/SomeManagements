@@ -40,7 +40,7 @@ struct State {
         auto h = Distance(StartPosition, EndPosition); //将要走的路程代价
         auto p = Distance(PrevPosition, CurPosition); //上一步的局部最优代价
         auto h_weight = DynamicWeight();
-        return g * h_weight + h *(1 -  h_weight) + p;
+        return g * h_weight + h * (1 - h_weight) + p;
     }
 
     void PrintCur() const {
@@ -79,6 +79,7 @@ public:
 
 private:
     std::pair<int, int> Start = {-1, -1}, End = {-1, -1};
+    vector<pair<int, int> > Starts;
     bool Initialized = false;
 
     void LoadDefaultMatrix();
@@ -98,7 +99,7 @@ inline AStarMatrix::AStarMatrix(int InRow, int InCol, const std::pair<int, int> 
 inline void AStarMatrix::LoadDefaultMatrix() {
     const char *DefaultMatrix[] = {
         "S***###*****####*****###*****###",
-        "#*#*#*#*###*#**#*###*#*#*###*#**",
+        "#*#*#*#*###*#**#*###*#*#*###*#S*",
         "#*#*#*#*#***#**#*#***#*#*#***#**",
         "#*#*#*#*#########*#####*#*#####*",
         "#*#*#*#*#*****#*#*****#*#*****#*",
@@ -118,14 +119,14 @@ inline void AStarMatrix::LoadDefaultMatrix() {
         "#*#*#***#*#*#*#*#*#*#*#*****#*#*",
         "#*#*#*###*#*#*#*#*#*#*####*#*#*#",
         "#*#*#*#***#*#*#*#*#*#*****#*#*#*",
-        "#*#*#*#*###*#*#*#*#*####*#*#*#*#",
+        "#S#*#*#*###*#*#*#*#*####*#*#*#*#",
         "#*#*#*#*#***#*#*#*#*****#*#*#*#*",
         "#*#*#*#*#*###*#*#*######*#*#*#*#",
         "#*#*#*#*#*#***#*#*****#*#*#*#*#*",
-        "#*#*#*#*#*#*###*#######*#*#*#*#*",
+        "#*#*#*#S#*#*###*#######*#*#*#*#*",
         "#*#*#*#*#*#*#********#*#*#*#*#*#",
-        "#*#*#*#*#*############*#*#*#*#*#",
-        "#*#*#*#*#*#************#*#*#*#*#",
+        "#*#*#*#*#*############*#S#*#*#*#",
+        "#*#*#*#*#*#S***********#*#*#*#*#",
         "#*#*#*#*#*##############*#*#*#*#",
         "#*#*#*#*#****************#*#*#E#",
         "################################"
@@ -138,10 +139,11 @@ inline void AStarMatrix::LoadDefaultMatrix() {
         for (int j = 0; j < 32; j++) {
             SetAt(i, j, DefaultMatrix[i][j]);
             if (DefaultMatrix[i][j] == 'S') {
-                if (Start != pair(-1, -1)) {
-                    LogManagement::GetInstance()->Error("multiple starts detected, already abort", "AStarMatrix");
-                    return;
-                }
+                // if (Start != pair(-1, -1)) {
+                //     LogManagement::GetInstance()->Error("multiple starts detected, already abort", "AStarMatrix");
+                //     return;
+                // }
+                Starts.emplace_back(i, j);
                 Start = {i, j};
             }
             if (DefaultMatrix[i][j] == 'E') {
@@ -200,44 +202,57 @@ inline void AStarMatrix::FindWay() {
     }
     const auto StartTime = high_resolution_clock::now();
     cout << "Finding Way ..." << endl;
-    priority_queue<State, vector<State>, std::greater<> > StateQueue;
-    unordered_set<State, StateHash> VisitedStates;
-    const State StartState{Start, Start, Start, End, static_cast<float>(sqrt(Row * Row + Col * Col)), {Start}, 0};
-    StateQueue.push(StartState);
-    VisitedStates.insert(StartState);
 
-    while (!StateQueue.empty()) {
-        const auto CurState = StateQueue.top();
-        StateQueue.pop();
+    int StartIndex = 0;
+    for (auto CurStart: Starts) {
+        cout << "Now Process: " << StartIndex << endl;
+        priority_queue<State, vector<State>, std::greater<> > StateQueue;
+        unordered_set<State, StateHash> VisitedStates;
+        const State StartState{CurStart, CurStart, CurStart, End, static_cast<float>(sqrt(Row * Row + Col * Col)), {CurStart}, 0};
+        StateQueue.push(StartState);
+        VisitedStates.insert(StartState);
 
-        for (int i = -1; i <= 1; i++) {
-            for (int j = -1; j <= 1; j++) {
-                auto NewState = CurState;
-                NewState.ActualCost += 1;
-                NewState.PrevPosition = CurState.CurPosition;
-                NewState.CurPosition.first += i;
-                NewState.CurPosition.second += j;
-                NewState.VisitedPoint.push_back({NewState.CurPosition});
-                if (NewState.CurPosition == End) {
-                    const auto EndTime = high_resolution_clock::now();
-                    const auto duration = duration_cast<milliseconds>(EndTime - StartTime);
-                    cout << "Find Way! Using Time: " << duration.count() << "ms" << endl;
-                    for (auto Point: NewState.VisitedPoint) {
-                        if (Point == Start || Point == End) continue;
+        while (!StateQueue.empty()) {
+            const auto CurState = StateQueue.top();
+            StateQueue.pop();
 
-                        SetAt(Point.first, Point.second, 'O');
+            for (int i = -1; i <= 1; i++) {
+                for (int j = -1; j <= 1; j++) {
+                    auto NewState = CurState;
+                    NewState.ActualCost += 1;
+                    NewState.PrevPosition = CurState.CurPosition;
+                    NewState.CurPosition.first += i;
+                    NewState.CurPosition.second += j;
+                    NewState.VisitedPoint.push_back({NewState.CurPosition});
+                    const auto NextElement = GetAt(NewState.CurPosition.first, NewState.CurPosition.second);
+                    if (NewState.CurPosition == End) {
+                        cout << "Find Way! Current Start Index: " << StartIndex << endl;
+                        for (auto Point: NewState.VisitedPoint) {
+                            if (Point == CurStart || Point == End || *NextElement == 'S') continue;
+                            SetAt(Point.first, Point.second, 'O');
+                        }
+                        goto LoopEnd;
+                    } else if (NextElement && *NextElement == 'O') {
+                        cout << "Find Internal Way! Current Start Index: " << StartIndex << endl;
+                        for (auto Point: NewState.VisitedPoint) {
+                            if (Point == CurStart || Point == End || *NextElement == 'S') continue;
+                            SetAt(Point.first, Point.second, 'O');
+                        }
+                        goto LoopEnd;
                     }
-                    ShowMatrix();
-                    return;
-                }
-                const auto NextElement = GetAt(NewState.CurPosition.first, NewState.CurPosition.second);
-                if (NextElement && *NextElement != '#' && !VisitedStates.contains(NewState)) {
-                    StateQueue.push(NewState);
-                    VisitedStates.insert(NewState);
+                    if (NextElement && *NextElement != '#' && !VisitedStates.contains(NewState)) {
+                        StateQueue.push(NewState);
+                        VisitedStates.insert(NewState);
+                    }
                 }
             }
         }
+        LoopEnd:
+        StartIndex++;
     }
+    ShowMatrix();
+    const auto EndTime = high_resolution_clock::now();
+    const auto duration = duration_cast<milliseconds>(EndTime - StartTime);
 
-    cout << "Dead End :(" << endl;
+    cout << "Using Time: " << duration.count() << " ms" << endl;
 }
