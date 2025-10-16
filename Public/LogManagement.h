@@ -8,6 +8,11 @@ enum Level {
     Error = 2,
 };
 
+/**
+ * @author tomasusan
+ * @date 2025-09-24
+ * @brief 整理格式的日志输出类
+ */
 class LogManagement : public Singleton<LogManagement>{
 public:
     void Display(const std::string &Message, const std::string &LogName = "DefaultLog");

@@ -11,6 +11,12 @@
 using namespace std;
 using namespace std::chrono;
 
+/**
+ * @author tomasusan
+ * @date 2025-09-29
+ * @brief 寻路状态结点
+ * @details 该结点存储寻路状态节点，同时为应用优先队列重写了比较和哈希函数。启发值由已走的实际代价、距离上一步的当前代价和距离终点的预期代价构成
+ */
 struct State {
     pair<int, int> CurPosition;
     pair<int, int> PrevPosition;
@@ -22,19 +28,36 @@ struct State {
 
     float ActualCost = .0f;
 
+    /**
+     * @author tomasusan
+     * @date 2025-09-30
+     * @brief 计算两点的欧几里得距离
+     * @param s 起点
+     * @param e 终点
+     * @return 两点欧几里得距离
+     */
     float Distance(const pair<int, int> &s, const pair<int, int> &e) const {
         return sqrt(pow(s.first - e.first, 2) + pow(s.second - e.second, 2));
     }
 
-    // 动态权重，防止过于靠近起点或终点时固定权重失效
+    /**
+     * @author tomasusan
+     * @date 2025-09-30
+     * @brief 动态权重，防止最开始和靠近终点时固定权重失效
+     * @return 获取当前启发值权重
+     */
     float DynamicWeight() const {
         float totalDist = Distance(StartPosition, EndPosition);
         float progress = Distance(StartPosition, CurPosition) / totalDist;
         return 0.3f + 0.4f * progress; // 权重在0.3到0.7之间动态变化
     }
 
-    float StartCostWeight = 0.5;
-
+    /**
+     * @author tomasusan
+     * @date 2025-09-30
+     * @brief 根据启发值和未来值计算代价
+     * @return 排序依据代价值
+     */
     float TotalCost() const {
         auto g = ActualCost; //已走的实际路程代价
         auto h = Distance(StartPosition, EndPosition); //将要走的路程代价
@@ -60,6 +83,12 @@ struct State {
     }
 };
 
+
+/**
+ * @author tomasusan
+ * @date 2025-09-30
+ * @brief 重写的状态节点辅助哈希结构
+ */
 struct StateHash {
     size_t operator()(const State &s) const {
         size_t h1 = hash<int>{}(s.CurPosition.first);
@@ -68,6 +97,12 @@ struct StateHash {
     }
 };
 
+
+/**
+ * @author tomasusan
+ * @date 2025-09-29
+ * @brief A*算法实现类
+ */
 class AStarMatrix : public Matrix<char> {
 public:
     AStarMatrix(int InRow, int InCol, const std::pair<int, int> &InStart, const std::pair<int, int> &InEnd,
@@ -85,6 +120,16 @@ private:
     void LoadDefaultMatrix();
 };
 
+/**
+ * @author tomasusan
+ * @date 2025-09-25
+ * @brief 寻路实现类构造函数
+ * @param InRow 创建的矩阵行数
+ * @param InCol 创建的矩阵列数
+ * @param InStart 设定起点
+ * @param InEnd 设定终点
+ * @param LoadDefault 加载默认矩阵迷宫，当为真时前序参数失效
+ */
 inline AStarMatrix::AStarMatrix(int InRow, int InCol, const std::pair<int, int> &InStart,
                                 const std::pair<int, int> &InEnd, bool LoadDefault): Matrix<char>(0, 0) {
     if (LoadDefault) {
@@ -96,9 +141,15 @@ inline AStarMatrix::AStarMatrix(int InRow, int InCol, const std::pair<int, int> 
     }
 }
 
+/**
+ * @author tomasusan
+ * @date 2025-09-25
+ * @brief 加载硬编码默认矩阵迷宫，并进行合法化
+ */
 inline void AStarMatrix::LoadDefaultMatrix() {
+    /** 硬编码32*32 迷宫矩阵*/
     const char *DefaultMatrix[] = {
-        "S***###*****####*****###*****###",
+        "S***###**S**####*****###*****###",
         "#*#*#*#*###*#**#*###*#*#*###*#S*",
         "#*#*#*#*#***#**#*#***#*#*#***#**",
         "#*#*#*#*#########*#####*#*#####*",
@@ -118,17 +169,17 @@ inline void AStarMatrix::LoadDefaultMatrix() {
         "#*#*###*#*#*#*#*#*#*#*#*####*#*#",
         "#*#*#***#*#*#*#*#*#*#*#*****#*#*",
         "#*#*#*###*#*#*#*#*#*#*####*#*#*#",
-        "#*#*#*#***#*#*#*#*#*#*****#*#*#*",
+        "#*#*#*#***#*#*#*#*#*#*****#*#*#S",
         "#S#*#*#*###*#*#*#*#*####*#*#*#*#",
         "#*#*#*#*#***#*#*#*#*****#*#*#*#*",
         "#*#*#*#*#*###*#*#*######*#*#*#*#",
         "#*#*#*#*#*#***#*#*****#*#*#*#*#*",
         "#*#*#*#S#*#*###*#######*#*#*#*#*",
-        "#*#*#*#*#*#*#********#*#*#*#*#*#",
-        "#*#*#*#*#*############*#S#*#*#*#",
+        "#*#*#*#*#*#*#*****S**#*#*#*#*#*#",
+        "#*#*#*#*#*############*#*#*#*#*#",
         "#*#*#*#*#*#S***********#*#*#*#*#",
         "#*#*#*#*#*##############*#*#*#*#",
-        "#*#*#*#*#****************#*#*#E#",
+        "#*#*#*#*#*******S********#*#*#E#",
         "################################"
     };
 
@@ -139,10 +190,6 @@ inline void AStarMatrix::LoadDefaultMatrix() {
         for (int j = 0; j < 32; j++) {
             SetAt(i, j, DefaultMatrix[i][j]);
             if (DefaultMatrix[i][j] == 'S') {
-                // if (Start != pair(-1, -1)) {
-                //     LogManagement::GetInstance()->Error("multiple starts detected, already abort", "AStarMatrix");
-                //     return;
-                // }
                 Starts.emplace_back(i, j);
                 Start = {i, j};
             }
@@ -163,11 +210,21 @@ inline void AStarMatrix::LoadDefaultMatrix() {
     Initialized = true;
 }
 
-
+/**
+ * @author tomasusan
+ * @date 2025-09-30
+ * @brief 设置控制台输出颜色
+ * @param color 期望颜色，具体参照枚举值
+ */
 inline void setColor(const int color) {
     SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), color);
 }
 
+/**
+ * @author tomasusan
+ * @date 205-09-29
+ * @brief 重写的展示类，添加输出样式
+ */
 inline void AStarMatrix::ShowMatrix() {
     if (!Initialized) {
         LogManagement::GetInstance()->Error("not initialized, will not show the Matrix", "AStarMatrix");
@@ -188,13 +245,20 @@ inline void AStarMatrix::ShowMatrix() {
             cout << Element << " ";
             setColor(WHITE);
         } else {
-            setColor(GREEN);
+            setColor(BLUE);
             cout << Element << " ";
+            setColor(WHITE);
         }
         if ((i + 1) % Col == 0) std::cout << std::endl;
     }
 }
 
+/**
+ * @author tomasusan
+ * @date 2025-09-29
+ * @brief 寻路具体实现
+ * @details 单点寻路采用混合权重启发，权重根据寻路进度动态分配，多点寻路则通过提前合并进行剪枝
+ */
 inline void AStarMatrix::FindWay() {
     if (!Initialized) {
         LogManagement::GetInstance()->Error("not initialized, will not perform the way finding", "AStarMatrix");
