@@ -7,6 +7,12 @@ file(GLOB_RECURSE PRIVATE_SOURCES "Private/*.cpp")
 
 add_executable(EventManagement main.cpp
         ${PRIVATE_SOURCES}
+        SomeTree/Tree.cpp
+        SomeTree/Tree.h
+        SomeTree/TreeNode.cpp
+        SomeTree/TreeNode.h
+        SomeTree/TreeManagement.cpp
+        SomeTree/TreeManagement.h
 )
 
 target_include_directories(EventManagement
