@@ -1,7 +1,7 @@
 #include <memory>
 
 #include "AStar/AStarMatrix.h"
-#include "AStar/Matrix.h"
+#include "GlobalUtils/Matrix.h"
 
 
 int main() {
