@@ -2,6 +2,8 @@
 #include "CellNode.h"
 #include <map>
 #include <set>
+
+#include "CellDetectMatrix.h"
 #include "../GlobalUtils/Matrix.h"
 
 struct Node {
@@ -10,7 +12,7 @@ struct Node {
 
 class CellDetect {
 private:
-    Matrix<char> *cellMatrix = nullptr;
+    CellDetectMatrix *cellMatrix = nullptr;
     std::pair<int, int> matrixSize = {-1, -1};
     std::set<int> cellSet;
     int setCount = 0;
