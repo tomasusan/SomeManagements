@@ -11,6 +11,8 @@ add_executable(EventManagement main.cpp
         CellDetect/CellDetect.h
         CellDetect/CellDetectMatrix.h
         GlobalUtils/Matrix.h
+        CellDetect/CellNode.cpp
+        CellDetect/CellNode.h
 )
 
 target_include_directories(EventManagement

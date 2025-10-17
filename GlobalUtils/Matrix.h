@@ -20,10 +20,9 @@ public:
     T* GetAt(int AtRow, int AtCol);
    virtual void ShowMatrix();
 
-private:
+protected:
 
     T* LinearMatrix;
-protected:
     void ResizeMatrix(int InRow, int InCol);
     int Row, Col;
     int Size = 0;
