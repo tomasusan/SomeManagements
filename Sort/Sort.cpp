@@ -176,11 +176,11 @@ void Sort::SortTest() {
 
         std::cout << "Ö´ÐÐºÄÊ±: " << duration.count() << " ºÁÃë" << std::endl;
     }
-    auto start = std::chrono::high_resolution_clock::now();
+    const auto start = std::chrono::high_resolution_clock::now();
     std::cout << "Ö´ÐÐSTLÄ¬ÈÏÅÅÐò..." << std::endl;
     std::sort(numbers.begin(), numbers.end());
-    auto end = std::chrono::high_resolution_clock::now();
-    auto duration = duration_cast<std::chrono::milliseconds>(end - start);
+    const auto end = std::chrono::high_resolution_clock::now();
+    const auto duration = duration_cast<std::chrono::milliseconds>(end - start);
     std::cout << "Ö´ÐÐºÄÊ±: " << duration.count() << " ºÁÃë" << std::endl;
 }
 
