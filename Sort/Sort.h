@@ -1,5 +1,4 @@
 #pragma once
-#include "Singleton.h"
 #include <vector>
 
 /**
@@ -31,7 +30,7 @@ public:
      * @param v 待排序数组
      * @param type 排序模型，默认冒泡
      */
-    static void sort(std::vector<int> &v, ESortType type = BubbleSort);
+    static void sort(std::vector<int> &v, ESortType type = ESortType::BubbleSort);
 
     /**
      * @author tomasusan

@@ -10,25 +10,25 @@
 
 void Sort::sort(std::vector<int> &v, const ESortType type) {
     switch (type) {
-        case BubbleSort:
+        case ESortType::BubbleSort:
             bubbleSort(v);
             break;
-        case SelectionSort:
+        case ESortType::SelectionSort:
             selectionSort(v);
             break;
-        case InsertionSort:
+        case ESortType::InsertionSort:
             insertionSort(v);
             break;
-        case QuickSort:
+        case ESortType::QuickSort:
             quickSort(v);
             break;
-        case MergeSort:
+        case ESortType::MergeSort:
             mergeSort(v);
             break;
-        case ShellSort:
+        case ESortType::ShellSort:
             shellSort(v);
             break;
-        case HeapSort:
+        case ESortType::HeapSort:
             heapSort(v);
             break;
         default:
@@ -139,31 +139,31 @@ void Sort::SortTest() {
         for (const auto e: numbers) tempArr.push_back(e);
         auto start = std::chrono::high_resolution_clock::now();
         switch (curType) {
-            case BubbleSort:
+            case ESortType::BubbleSort:
                 std::cout << "Ö´ÐÐÃ°ÅÝÅÅÐò..." << std::endl;
                 bubbleSort(tempArr);
                 break;
-            case SelectionSort:
+            case ESortType::SelectionSort:
                 std::cout << "Ö´ÐÐÑ¡ÔñÅÅÐò..." << std::endl;
                 selectionSort(tempArr);
                 break;
-            case InsertionSort:
+            case ESortType::InsertionSort:
                 std::cout << "Ö´ÐÐ²åÈëÅÅÐò..." << std::endl;
                 insertionSort(tempArr);
                 break;
-            case QuickSort:
+            case ESortType::QuickSort:
                 std::cout << "Ö´ÐÐ¿ìËÙÅÅÐò..." << std::endl;
                 quickSort(tempArr);
                 break;
-            case MergeSort:
+            case ESortType::MergeSort:
                 std::cout << "Ö´ÐÐ¹é²¢ÅÅÐò..." << std::endl;
                 mergeSort(tempArr);
                 break;
-            case ShellSort:
+            case ESortType::ShellSort:
                 std::cout << "Ö´ÐÐÏ£¶ûÅÅÐò..." << std::endl;
                 shellSort(tempArr);
                 break;
-            case HeapSort:
+            case ESortType::HeapSort:
                 std::cout << "Ö´ÐÐ¶ÑÅÅÐò..." << std::endl;
                 heapSort(tempArr);
                 break;
