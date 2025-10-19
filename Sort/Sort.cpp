@@ -85,12 +85,17 @@ void Sort::mergeSort(std::vector<int> &v) {
 }
 
 void Sort::shellSort(std::vector<int> &v) {
-    int gap = static_cast<int>(v.size()) / 3 + 1;
-    while (gap) {
-        for (int i = 0; i < v.size() - gap; i++) {
-            if (v[i] > v[i + gap]) std::swap(v[i], v[i + gap]);
+    const int n = static_cast<int>(v.size());
+    for (int gap = n / 2; gap > 0; gap /= 2) {
+        for (int i = gap; i < n; ++i) {
+            const int temp = v[i];
+            int j = i;
+            while (j >= gap && v[j - gap] > temp) {
+                v[j] = v[j - gap];
+                j -= gap;
+            }
+            v[j] = temp;
         }
-        gap--;
     }
 }
 
