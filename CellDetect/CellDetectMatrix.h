@@ -45,6 +45,9 @@ inline void CellDetectMatrix::ShowMatrix() {
             if (color == 7) color = 9;
             setColor(color);
         }
+        if (LinearMatrix[i] == '#') {
+            setColor(BLACK);
+        }
         std::cout << LinearMatrix[i] << " ";
 
         setColor(WHITE);

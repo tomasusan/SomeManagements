@@ -1,17 +1,27 @@
-//
-// Created by admin on 25-10-16.
-//
-
 #include "CellDetect.h"
 
+#include <queue>
 #include <utility>
+#include <vector>
+#include <algorithm>
 
+/**
+ * @author tomasusan
+ * @date 2025-10-16
+ * @brief 构造函数
+ * @param loadDefault 是否加载默认矩阵
+ */
 CellDetect::CellDetect(const bool loadDefault) {
     if (loadDefault) {
         LoadDefaultCellMatrix();
     }
 }
 
+/**
+ * @author tomasusan
+ * @date 2025-10-16
+ * @brief 加载默认硬编码矩阵
+ */
 void CellDetect::LoadDefaultCellMatrix() {
     /** 硬编码32*32 矩阵*/
     const char* DefaultMatrix[32] = {
@@ -29,8 +39,8 @@ void CellDetect::LoadDefaultCellMatrix() {
         "********************************",
         "****########################****",
         "***#######***********########***",
-        "**#########***###***##########**",
-        "**#########***###***##########**",
+        "**#########*######***########***",
+        "**#########*######***#########**",
         "**#########**********########***",
         "***#########################****",
         "********************************",
@@ -38,13 +48,13 @@ void CellDetect::LoadDefaultCellMatrix() {
         "*****#######***###########******",
         "****#########***##############**",
         "***###########***#######*****#**",
-        "**############***######******#**",
+        "**############***#############**",
         "**#############***####*******#**",
         "*****************************#**",
-        "****######*******************#**",
-        "***########******************#**",
-        "**##########*****************#**",
-        "**#########*********************",
+        "****######****###########****#**",
+        "***########**##*##########***#**",
+        "**##########*##**##########**#**",
+        "**#########******************#**",
         "***###########################**",
         "********************************"
     };
@@ -62,7 +72,15 @@ void CellDetect::LoadDefaultCellMatrix() {
     matrixSize = {32, 32};
 }
 
-void CellDetect::DetectCells() {
+/**
+ * @author tomasusan
+ * @date 2025-10-16
+ * @brief 并查集实现函数
+ * @param seeOnlyRoot 仅根节点视图
+ */
+void CellDetect::DetectCells(bool seeOnlyRoot) {
+    cellMatrix->ShowMatrix();
+    std :: cout << "Start Cell Detecting..." << std::endl;
     for (int i = 0; i < matrixSize.first; i++) {
         for (int j = 0; j < matrixSize.second; j++) {
             const auto curElement = cellMatrix->GetAt(i, j);
@@ -74,18 +92,20 @@ void CellDetect::DetectCells() {
             if (FindRoot(curNode)->setIndex == -1) {
                 curNode->setRoot = nullptr;
                 curNode->setIndex = AddSet(curNode->location);
+                rootSet.insert(curNode);
+                rootMap.insert(std::pair(curNode->setIndex, curNode));
             }
 
-            // 八向结点传递
+            // 六向结点传递，由于从上向下扫描，所以没有必要回扫上方的结点
             for (int k = 0; k <= 1; k++) {
                 for (int l = -1; l <= 1; l++) {
                     if (k == 0 && l == 0) continue;
-                    auto neighbourElement = cellMatrix->GetAt(i + k, j + l);
-                    //std::cout << *neighbourElement << std::endl;
+                    const auto neighbourElement = cellMatrix->GetAt(i + k, j + l);
                     if (!neighbourElement || *neighbourElement != '#') continue;
 
                     it = nodeMap.find(std::pair<int, int>(i + k, j + l));
                     const auto neighbourNode = it->second;
+                    // 同源结点
                     if (FindRoot(curNode)->setIndex == FindRoot(neighbourNode)->setIndex) continue;
 
                     if (FindRoot(neighbourNode)->setIndex == -1) {
@@ -101,13 +121,16 @@ void CellDetect::DetectCells() {
         }
     }
 
+    auto idMap = CreateMap();
+
     for (int i=0;i<matrixSize.first;i++) {
         for (int j=0;j<matrixSize.second;j++) {
             auto curElement = cellMatrix->GetAt(i, j);
             if (!curElement || *curElement != '#') continue;
             auto it = nodeMap.find(std::pair<int, int>(i, j));
             auto curNode = it->second;
-            cellMatrix->SetAt(i, j, '0' + FindRoot(curNode)->setIndex);
+            if (seeOnlyRoot) cellMatrix->SetAt(i, j, 'A' + curNode->setIndex);
+            else cellMatrix->SetAt(i, j, 'A' + idMap[FindRoot(curNode)->setIndex]);
         }
     }
 
@@ -116,6 +139,13 @@ void CellDetect::DetectCells() {
     return;
 }
 
+/**
+ * @author tomasusan
+ * @date 2025-10-16
+ * @brief 根据链形结构查找集合根节点
+ * @param node 需要查找的结点
+ * @return 所查找的结点的集合根结点
+ */
 CellNode *CellDetect::FindRoot(CellNode *node) {
     auto curNode = node;
     while (curNode->setRoot) {
@@ -125,8 +155,35 @@ CellNode *CellDetect::FindRoot(CellNode *node) {
     return curNode;
 }
 
+/**
+ * @author tomasusan
+ * @date 2025-10-16
+ * @brief 产生一个合法集合
+ * @param root 指定根节点
+ * @return 该集合id
+ */
 int CellDetect::AddSet(std::pair<int, int> root) {
     setCount++;
     cellSet.insert(setCount);
     return setCount;
 }
+
+/**
+ * @author tomasusan
+ * @date 2025-10-19
+ * @breif 对现有的非连续有序的setIndex集进行映射排序，产生有序连续的id序列，使得输出有序
+ * @return id映射
+ */
+std::map<int, int> CellDetect::CreateMap() const {
+    std::vector<int> cacheId;
+    for (auto index:cellSet) {
+        cacheId.push_back(index);
+    }
+    std::ranges::sort(cacheId);
+    std::map<int, int> map;
+    for (int i=0;i<cacheId.size();i++) {
+        map.insert(std::pair<int, int>(cacheId[i], i));
+    }
+    return map;
+}
+
