@@ -7,7 +7,7 @@
  * @date  2025-10-19
  * @brief 指定排序模型
  */
-enum ESortType {
+enum class ESortType {
     BubbleSort,
     SelectionSort,
     InsertionSort,
