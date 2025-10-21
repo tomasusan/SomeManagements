@@ -3,21 +3,21 @@ import sys
 
 
 def generate_random_numbers(filename: str, count: int, min_value: int = 1, max_value: int = 1_000_000):
-    """ç”ŸæˆæŒ‡å®šæ•°é‡çš„éšæœºæ•´æ•°å¹¶ä¿å­˜åˆ°æ–‡ä»¶"""
+    """Éú³ÉÖ¸¶¨ÊıÁ¿µÄËæ»úÕûÊı²¢±£´æµ½ÎÄ¼ş"""
     with open(filename, 'w') as f:
         for _ in range(count):
             number = random.randint(min_value, max_value)
             f.write(f"{number}\n")
 
 if __name__ == "__main__":
-    # ä»å‘½ä»¤è¡Œå‚æ•°è¯»å–æ•°é‡
+    # ´ÓÃüÁîĞĞ²ÎÊı¶ÁÈ¡ÊıÁ¿
     if len(sys.argv) > 1:
         try:
             total_number = int(sys.argv[1])
         except ValueError:
-            print("å‚æ•°é”™è¯¯ï¼Œè¯·è¾“å…¥æ•´æ•°ã€‚ä½¿ç”¨é»˜è®¤æ•°é‡ 50000")
+            print("²ÎÊı´íÎó£¬ÇëÊäÈëÕûÊı¡£Ê¹ÓÃÄ¬ÈÏÊıÁ¿ 50000")
             total_number = 50000
     else:
         total_number = 50000
     generate_random_numbers("..\\Sort\\random_numbers.txt", total_number)
-    print("å·²ç”Ÿæˆéšæœºæ•´æ•°åˆ°æ–‡ä»¶ random_numbers.txt")
+    print("ÒÑÉú³ÉËæ»úÕûÊıµ½ÎÄ¼ş random_numbers.txt")
