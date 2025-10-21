@@ -184,7 +184,7 @@ void Sort::SortTest() {
     std::cout << "Ö´ÐÐºÄÊ±: " << duration.count() << " ºÁÃë" << std::endl;
 }
 
-void Sort::quickSortImp(std::vector<int> &v, int left, int right) {
+void Sort::quickSortImp(std::vector<int> &v, const int left, const int right) {
     if (left >= right) return;
 
     int i = left;
