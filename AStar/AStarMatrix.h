@@ -116,12 +116,13 @@ public:
     void FindWay();
 
 private:
-    std::vector<vector<pair<int, int>>> Paths;
+    std::vector<vector<pair<int, int> > > Paths;
     std::pair<int, int> Start = {-1, -1}, End = {-1, -1};
     vector<pair<int, int> > Starts;
     bool Initialized = false;
 
     void LoadDefaultMatrix();
+
     void ToFile();
 };
 
@@ -222,8 +223,8 @@ inline void AStarMatrix::ToFile() {
         LogManagement::GetInstance()->Error("Could not open file", "AStarMatrix");
     }
 
-    for (int i=-1;i<=Row;i++) {
-        for (int j=-1;j<=Col;j++) {
+    for (int i = -1; i <= Row; i++) {
+        for (int j = -1; j <= Col; j++) {
             const auto cur = GetAt(i, j);
             if (!cur) outfile << '#';
             else outfile << *cur;
@@ -236,24 +237,28 @@ inline void AStarMatrix::ToFile() {
     filePath = R"(..\AStar\Path.txt)";
     outfile = std::ofstream(filePath);
 
-    for (const auto& e:Paths) {
-        for (auto path:e)
+    for (const auto &e: Paths) {
+        for (auto path: e)
             outfile << path.first + 1 << " " << path.second + 1 << " ";
 
         outfile << endl;
     }
 
+    auto future = std::async(std::launch::async, []()-> int {
 #ifdef _WIN32
-    auto future = std::async(std::launch::async, []()->int {
         return std::system("python ..\\AStar\\Draw.py");
+#elif _LINUX
+            return std::system("python3 ..\\AStar\\Draw.py");
+#else
+                LogManagement::GetInstance()->Error("Unsupported platform", "AStarMatrix");
+#endif
     });
-    std::cout<<"生成迷宫图像中>>>"<<std::endl;
+    std::cout << "生成迷宫图像中>>>" << std::endl;
     int pyResult = future.get();
     if (pyResult != 0) {
         LogManagement::GetInstance()->Error("Python脚本执行错误", "AStarMatrix");
     }
-    std::cout<<"迷宫图像生成完毕:"<<std::endl;
-#endif
+    std::cout << "迷宫图像生成完毕:" << std::endl;
 
 
     outfile.close();
@@ -345,7 +350,7 @@ inline void AStarMatrix::FindWay() {
                     const auto NextElement = GetAt(NewState.CurPosition.first, NewState.CurPosition.second);
                     if (NewState.CurPosition == End) {
                         cout << "Find Way! Current Start Index: " << StartIndex << endl;
-                            Paths.push_back(NewState.VisitedPoint);
+                        Paths.push_back(NewState.VisitedPoint);
                         for (auto Point: NewState.VisitedPoint) {
                             if (Point == CurStart || Point == End || *NextElement == 'S') continue;
                             SetAt(Point.first, Point.second, 'O');
@@ -353,7 +358,7 @@ inline void AStarMatrix::FindWay() {
                         goto LoopEnd;
                     } else if (NextElement && *NextElement == 'O') {
                         cout << "Find Internal Way! Current Start Index: " << StartIndex << endl;
-                            Paths.push_back(NewState.VisitedPoint);
+                        Paths.push_back(NewState.VisitedPoint);
                         for (auto Point: NewState.VisitedPoint) {
                             if (Point == CurStart || Point == End || *NextElement == 'S') continue;
                             SetAt(Point.first, Point.second, 'O');
@@ -367,7 +372,7 @@ inline void AStarMatrix::FindWay() {
                 }
             }
         }
-        LoopEnd:
+    LoopEnd:
         StartIndex++;
     }
     // ShowMatrix();
