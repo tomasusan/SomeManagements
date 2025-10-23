@@ -8,14 +8,17 @@
 #include <windows.h>
 #include <chrono>
 #include <cmath>
+#include <fstream>
+#include <future>
+#include <set>
 using namespace std;
 using namespace std::chrono;
 
 /**
  * @author tomasusan
  * @date 2025-09-29
- * @brief å¯»è·¯çŠ¶æ€ç»“ç‚¹
- * @details è¯¥ç»“ç‚¹å­˜å‚¨å¯»è·¯çŠ¶æ€èŠ‚ç‚¹ï¼ŒåŒæ—¶ä¸ºåº”ç”¨ä¼˜å…ˆé˜Ÿåˆ—é‡å†™äº†æ¯”è¾ƒå’Œå“ˆå¸Œå‡½æ•°ã€‚å¯å‘å€¼ç”±å·²èµ°çš„å®é™…ä»£ä»·ã€è·ç¦»ä¸Šä¸€æ­¥çš„å½“å‰ä»£ä»·å’Œè·ç¦»ç»ˆç‚¹çš„é¢„æœŸä»£ä»·æ„æˆ
+ * @brief Ñ°Â·×´Ì¬½áµã
+ * @details ¸Ã½áµã´æ´¢Ñ°Â·×´Ì¬½Úµã£¬Í¬Ê±ÎªÓ¦ÓÃÓÅÏÈ¶ÓÁĞÖØĞ´ÁË±È½ÏºÍ¹şÏ£º¯Êı¡£Æô·¢ÖµÓÉÒÑ×ßµÄÊµ¼Ê´ú¼Û¡¢¾àÀëÉÏÒ»²½µÄµ±Ç°´ú¼ÛºÍ¾àÀëÖÕµãµÄÔ¤ÆÚ´ú¼Û¹¹³É
  */
 struct State {
     pair<int, int> CurPosition;
@@ -31,10 +34,10 @@ struct State {
     /**
      * @author tomasusan
      * @date 2025-09-30
-     * @brief è®¡ç®—ä¸¤ç‚¹çš„æ¬§å‡ é‡Œå¾—è·ç¦»
-     * @param s èµ·ç‚¹
-     * @param e ç»ˆç‚¹
-     * @return ä¸¤ç‚¹æ¬§å‡ é‡Œå¾—è·ç¦»
+     * @brief ¼ÆËãÁ½µãµÄÅ·¼¸ÀïµÃ¾àÀë
+     * @param s Æğµã
+     * @param e ÖÕµã
+     * @return Á½µãÅ·¼¸ÀïµÃ¾àÀë
      */
     float Distance(const pair<int, int> &s, const pair<int, int> &e) const {
         return sqrt(pow(s.first - e.first, 2) + pow(s.second - e.second, 2));
@@ -43,25 +46,25 @@ struct State {
     /**
      * @author tomasusan
      * @date 2025-09-30
-     * @brief åŠ¨æ€æƒé‡ï¼Œé˜²æ­¢æœ€å¼€å§‹å’Œé è¿‘ç»ˆç‚¹æ—¶å›ºå®šæƒé‡å¤±æ•ˆ
-     * @return è·å–å½“å‰å¯å‘å€¼æƒé‡
+     * @brief ¶¯Ì¬È¨ÖØ£¬·ÀÖ¹×î¿ªÊ¼ºÍ¿¿½üÖÕµãÊ±¹Ì¶¨È¨ÖØÊ§Ğ§
+     * @return »ñÈ¡µ±Ç°Æô·¢ÖµÈ¨ÖØ
      */
     float DynamicWeight() const {
         float totalDist = Distance(StartPosition, EndPosition);
         float progress = Distance(StartPosition, CurPosition) / totalDist;
-        return 0.3f + 0.4f * progress; // æƒé‡åœ¨0.3åˆ°0.7ä¹‹é—´åŠ¨æ€å˜åŒ–
+        return 0.3f + 0.4f * progress; // È¨ÖØÔÚ0.3µ½0.7Ö®¼ä¶¯Ì¬±ä»¯
     }
 
     /**
      * @author tomasusan
      * @date 2025-09-30
-     * @brief æ ¹æ®å¯å‘å€¼å’Œæœªæ¥å€¼è®¡ç®—ä»£ä»·
-     * @return æ’åºä¾æ®ä»£ä»·å€¼
+     * @brief ¸ù¾İÆô·¢ÖµºÍÎ´À´Öµ¼ÆËã´ú¼Û
+     * @return ÅÅĞòÒÀ¾İ´ú¼ÛÖµ
      */
     float TotalCost() const {
-        auto g = ActualCost; //å·²èµ°çš„å®é™…è·¯ç¨‹ä»£ä»·
-        auto h = Distance(StartPosition, EndPosition); //å°†è¦èµ°çš„è·¯ç¨‹ä»£ä»·
-        auto p = Distance(PrevPosition, CurPosition); //ä¸Šä¸€æ­¥çš„å±€éƒ¨æœ€ä¼˜ä»£ä»·
+        auto g = ActualCost; //ÒÑ×ßµÄÊµ¼ÊÂ·³Ì´ú¼Û
+        auto h = Distance(StartPosition, EndPosition); //½«Òª×ßµÄÂ·³Ì´ú¼Û
+        auto p = Distance(PrevPosition, CurPosition); //ÉÏÒ»²½µÄ¾Ö²¿×îÓÅ´ú¼Û
         auto h_weight = DynamicWeight();
         return g * h_weight + h * (1 - h_weight) + p;
     }
@@ -87,7 +90,7 @@ struct State {
 /**
  * @author tomasusan
  * @date 2025-09-30
- * @brief é‡å†™çš„çŠ¶æ€èŠ‚ç‚¹è¾…åŠ©å“ˆå¸Œç»“æ„
+ * @brief ÖØĞ´µÄ×´Ì¬½Úµã¸¨Öú¹şÏ£½á¹¹
  */
 struct StateHash {
     size_t operator()(const State &s) const {
@@ -101,7 +104,7 @@ struct StateHash {
 /**
  * @author tomasusan
  * @date 2025-09-29
- * @brief A*ç®—æ³•å®ç°ç±»
+ * @brief A*Ëã·¨ÊµÏÖÀà
  */
 class AStarMatrix : public Matrix<char> {
 public:
@@ -113,22 +116,24 @@ public:
     void FindWay();
 
 private:
+    std::vector<vector<pair<int, int>>> Paths;
     std::pair<int, int> Start = {-1, -1}, End = {-1, -1};
     vector<pair<int, int> > Starts;
     bool Initialized = false;
 
     void LoadDefaultMatrix();
+    void ToFile();
 };
 
 /**
  * @author tomasusan
  * @date 2025-09-25
- * @brief å¯»è·¯å®ç°ç±»æ„é€ å‡½æ•°
- * @param InRow åˆ›å»ºçš„çŸ©é˜µè¡Œæ•°
- * @param InCol åˆ›å»ºçš„çŸ©é˜µåˆ—æ•°
- * @param InStart è®¾å®šèµ·ç‚¹
- * @param InEnd è®¾å®šç»ˆç‚¹
- * @param LoadDefault åŠ è½½é»˜è®¤çŸ©é˜µè¿·å®«ï¼Œå½“ä¸ºçœŸæ—¶å‰åºå‚æ•°å¤±æ•ˆ
+ * @brief Ñ°Â·ÊµÏÖÀà¹¹Ôìº¯Êı
+ * @param InRow ´´½¨µÄ¾ØÕóĞĞÊı
+ * @param InCol ´´½¨µÄ¾ØÕóÁĞÊı
+ * @param InStart Éè¶¨Æğµã
+ * @param InEnd Éè¶¨ÖÕµã
+ * @param LoadDefault ¼ÓÔØÄ¬ÈÏ¾ØÕóÃÔ¹¬£¬µ±ÎªÕæÊ±Ç°Ğò²ÎÊıÊ§Ğ§
  */
 inline AStarMatrix::AStarMatrix(int InRow, int InCol, const std::pair<int, int> &InStart,
                                 const std::pair<int, int> &InEnd, bool LoadDefault): Matrix<char>(0, 0) {
@@ -144,43 +149,43 @@ inline AStarMatrix::AStarMatrix(int InRow, int InCol, const std::pair<int, int> 
 /**
  * @author tomasusan
  * @date 2025-09-25
- * @brief åŠ è½½ç¡¬ç¼–ç é»˜è®¤çŸ©é˜µè¿·å®«ï¼Œå¹¶è¿›è¡Œåˆæ³•åŒ–
+ * @brief ¼ÓÔØÓ²±àÂëÄ¬ÈÏ¾ØÕóÃÔ¹¬£¬²¢½øĞĞºÏ·¨»¯
  */
 inline void AStarMatrix::LoadDefaultMatrix() {
-    /** ç¡¬ç¼–ç 32*32 è¿·å®«çŸ©é˜µ*/
+    /** Ó²±àÂë32*32 ÃÔ¹¬¾ØÕó*/
     const char *DefaultMatrix[] = {
-        "S***###**S**####*****###*****###",
-        "#*#*#*#*###*#**#*###*#*#*###*#S*",
-        "#*#*#*#*#***#**#*#***#*#*#***#**",
-        "#*#*#*#*#########*#####*#*#####*",
-        "#*#*#*#*#*****#*#*****#*#*****#*",
-        "#*#*#*#*####*#*#*####*#*#*####*#",
-        "#*#*#*#*****#*#*#*****#*#*#*****",
-        "#*#*#*####*#*#*#*#*####*#*#*####",
-        "#*#*#*****#*#*#*#*#*****#*#*#***",
-        "#*#*#####*#*#*#*#*#*#####*#*#*##",
-        "#*#*****#*#*#*#*#*#*#*****#*#*#*",
-        "#*#####*#*#*#*#*#*#*#*#*###*#*#*",
-        "#*****#*#*#*#*#*#*#*#*#*#***#*#*",
-        "####*#*#*#*#*#**#*##*#*#*#####*#",
-        "#***#*#*#*#*#*#*#*#*#*#*#*****#*",
-        "#*###*#*#*#*#*#*#*#*#*#*#*####*#",
-        "#*#***#*#*#*#*#*#*#*#*#*#*****#*",
-        "#*#*###*#*#*#*#*#*#*#*#*####*#*#",
-        "#*#*#***#*#*#*#*#*#*#*#*****#*#*",
-        "#*#*#*###*#*#*#*#*#*#*####*#*#*#",
-        "#*#*#*#***#*#*#*#*#*#*****#*#*#S",
-        "#S#*#*#*###*#*#*#*#*####*#*#*#*#",
-        "#*#*#*#*#***#*#*#*#*****#*#*#*#*",
-        "#*#*#*#*#*###*#*#*######*#*#*#*#",
-        "#*#*#*#*#*#***#*#*****#*#*#*#*#*",
-        "#*#*#*#S#*#*###*#######*#*#*#*#*",
-        "#*#*#*#*#*#*#*****S**#*#*#*#*#*#",
-        "#*#*#*#*#*############*#*#*#*#*#",
-        "#*#*#*#*#*#S***********#*#*#*#*#",
-        "#*#*#*#*#*##############*#*#*#*#",
-        "#*#*#*#*#*******S********#*#*#E#",
-        "################################"
+        "S***************#########*******",
+        "###*###########****####E#######*",
+        "###*#*********#*##*####*###***#*",
+        "###*#*#####*#*#*##*####***#*#*#*",
+        "###*#*#***#*#*#*##*####*#*#*#*#*",
+        "###*#*#*#*#*#*#*##*####*#*#*#*#*",
+        "###*#*#*#*#*#*#*##*####*#*#*#*#*",
+        "###*#*#*#*#*#*#*##*####*#***#*#*",
+        "###*#*#*#*#*#*#*##*####*#####*#*",
+        "###*#*#*#*#*#*#*##*####*#***#*#*",
+        "###*#*#*#*#*#*#*##*####*#*#*#*#*",
+        "###*#*#*#*#*#*#*##*####*#*#*#*#*",
+        "###*#*#*#*#*#*#*##*####*#*#*#*#*",
+        "###*#*#*#*#*#*#*##*####*#*#*#*#*",
+        "###*#*#*#*#*#*#*##*####*#*#*#*#*",
+        "###*#*#*#*#*#*#*##*####*#*#*#*#*",
+        "###*#*#*#*#*#*#*##*####*#*#*#*#*",
+        "###*#*#*#*#*#*#*##*####*#*#*#*#*",
+        "###*#*#*#*#*#*#*##*####*#*#*#*#*",
+        "###*#*#*#*#*#*#*##*####*#*#*#*#*",
+        "###*#*#*#*#*#*#*##*####*#*#*#*#*",
+        "###*#*#*#*#*#*#*##*####*#*#*#*#*",
+        "###*#*#*#*#*#*#*##*####*#*#*#*#*",
+        "###*#*#*#*#*#*#*##*####*#*#*#*#*",
+        "###*#*#*#*#*#*#*##*####*#*#*#*#*",
+        "###*#*#*#*#*#*#*##*####*#*#*#*#*",
+        "###*#*#*#*#*#*#*##*####*#*#*#*#*",
+        "###*#*#*#*#*#*#*##******#*#*###*",
+        "###*#*#*#*#*#*#*#######*#*#*###*",
+        "###*#*#S#*#*#*#*********#*#*###*",
+        "###*#*###*#*#*#############*#*#*",
+        "S******************************S"
     };
 
     ResizeMatrix(32, 32);
@@ -210,11 +215,55 @@ inline void AStarMatrix::LoadDefaultMatrix() {
     Initialized = true;
 }
 
+inline void AStarMatrix::ToFile() {
+    std::string filePath = R"(..\AStar\CacheFile.txt)";
+    std::ofstream outfile(filePath);
+    if (!outfile.is_open()) {
+        LogManagement::GetInstance()->Error("Could not open file", "AStarMatrix");
+    }
+
+    for (int i=-1;i<=Row;i++) {
+        for (int j=-1;j<=Col;j++) {
+            const auto cur = GetAt(i, j);
+            if (!cur) outfile << '#';
+            else outfile << *cur;
+        }
+        outfile << std::endl;
+    }
+
+    outfile.close();
+
+    filePath = R"(..\AStar\Path.txt)";
+    outfile = std::ofstream(filePath);
+
+    for (const auto& e:Paths) {
+        for (auto path:e)
+            outfile << path.first + 1 << " " << path.second + 1 << " ";
+
+        outfile << endl;
+    }
+
+#ifdef _WIN32
+    auto future = std::async(std::launch::async, []()->int {
+        return std::system("python ..\\AStar\\Draw.py");
+    });
+    std::cout<<"Éú³ÉÃÔ¹¬Í¼ÏñÖĞ>>>"<<std::endl;
+    int pyResult = future.get();
+    if (pyResult != 0) {
+        LogManagement::GetInstance()->Error("Python½Å±¾Ö´ĞĞ´íÎó", "AStarMatrix");
+    }
+    std::cout<<"ÃÔ¹¬Í¼ÏñÉú³ÉÍê±Ï:"<<std::endl;
+#endif
+
+
+    outfile.close();
+}
+
 /**
  * @author tomasusan
  * @date 2025-09-30
- * @brief è®¾ç½®æ§åˆ¶å°è¾“å‡ºé¢œè‰²
- * @param color æœŸæœ›é¢œè‰²ï¼Œå…·ä½“å‚ç…§æšä¸¾å€¼
+ * @brief ÉèÖÃ¿ØÖÆÌ¨Êä³öÑÕÉ«
+ * @param color ÆÚÍûÑÕÉ«£¬¾ßÌå²ÎÕÕÃ¶¾ÙÖµ
  */
 inline void setColor(const int color) {
     SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), color);
@@ -223,7 +272,7 @@ inline void setColor(const int color) {
 /**
  * @author tomasusan
  * @date 205-09-29
- * @brief é‡å†™çš„å±•ç¤ºç±»ï¼Œæ·»åŠ è¾“å‡ºæ ·å¼
+ * @brief ÖØĞ´µÄÕ¹Ê¾Àà£¬Ìí¼ÓÊä³öÑùÊ½
  */
 inline void AStarMatrix::ShowMatrix() {
     if (!Initialized) {
@@ -256,8 +305,8 @@ inline void AStarMatrix::ShowMatrix() {
 /**
  * @author tomasusan
  * @date 2025-09-29
- * @brief å¯»è·¯å…·ä½“å®ç°
- * @details å•ç‚¹å¯»è·¯é‡‡ç”¨æ··åˆæƒé‡å¯å‘ï¼Œæƒé‡æ ¹æ®å¯»è·¯è¿›åº¦åŠ¨æ€åˆ†é…ï¼Œå¤šç‚¹å¯»è·¯åˆ™é€šè¿‡æå‰åˆå¹¶è¿›è¡Œå‰ªæ
+ * @brief Ñ°Â·¾ßÌåÊµÏÖ
+ * @details µ¥µãÑ°Â·²ÉÓÃ»ìºÏÈ¨ÖØÆô·¢£¬È¨ÖØ¸ù¾İÑ°Â·½ø¶È¶¯Ì¬·ÖÅä£¬¶àµãÑ°Â·ÔòÍ¨¹ıÌáÇ°ºÏ²¢½øĞĞ¼ôÖ¦
  */
 inline void AStarMatrix::FindWay() {
     if (!Initialized) {
@@ -282,6 +331,11 @@ inline void AStarMatrix::FindWay() {
 
             for (int i = -1; i <= 1; i++) {
                 for (int j = -1; j <= 1; j++) {
+                    if (abs(i * j) == 1) {
+                        auto neighbour_1 = GetAt(CurState.CurPosition.first + i, CurState.CurPosition.second);
+                        auto neighbour_2 = GetAt(CurState.CurPosition.first, CurState.CurPosition.second + j);
+                        if (!(neighbour_1 && neighbour_2 && (*neighbour_1 != '#' || *neighbour_2 != '#'))) continue;
+                    }
                     auto NewState = CurState;
                     NewState.ActualCost += 1;
                     NewState.PrevPosition = CurState.CurPosition;
@@ -291,6 +345,7 @@ inline void AStarMatrix::FindWay() {
                     const auto NextElement = GetAt(NewState.CurPosition.first, NewState.CurPosition.second);
                     if (NewState.CurPosition == End) {
                         cout << "Find Way! Current Start Index: " << StartIndex << endl;
+                            Paths.push_back(NewState.VisitedPoint);
                         for (auto Point: NewState.VisitedPoint) {
                             if (Point == CurStart || Point == End || *NextElement == 'S') continue;
                             SetAt(Point.first, Point.second, 'O');
@@ -298,6 +353,7 @@ inline void AStarMatrix::FindWay() {
                         goto LoopEnd;
                     } else if (NextElement && *NextElement == 'O') {
                         cout << "Find Internal Way! Current Start Index: " << StartIndex << endl;
+                            Paths.push_back(NewState.VisitedPoint);
                         for (auto Point: NewState.VisitedPoint) {
                             if (Point == CurStart || Point == End || *NextElement == 'S') continue;
                             SetAt(Point.first, Point.second, 'O');
@@ -314,9 +370,10 @@ inline void AStarMatrix::FindWay() {
         LoopEnd:
         StartIndex++;
     }
-    ShowMatrix();
+    // ShowMatrix();
     const auto EndTime = high_resolution_clock::now();
     const auto duration = duration_cast<milliseconds>(EndTime - StartTime);
-
     cout << "Using Time: " << duration.count() << " ms" << endl;
+
+    ToFile();
 }
