@@ -157,7 +157,7 @@ inline void AStarMatrix::LoadDefaultMatrix() {
     const char *DefaultMatrix[] = {
         "S***************#########*******",
         "###*###########****####E#######*",
-        "###*#*********#*##*####*###***#*",
+        "###*#*******S*#*##*####*###***#*",
         "###*#*#####*#*#*##*####***#*#*#*",
         "###*#*#***#*#*#*##*####*#*#*#*#*",
         "###*#*#*#*#*#*#*##*####*#*#*#*#*",
@@ -181,7 +181,7 @@ inline void AStarMatrix::LoadDefaultMatrix() {
         "###*#*#*#*#*#*#*##*####*#*#*#*#*",
         "###*#*#*#*#*#*#*##*####*#*#*#*#*",
         "###*#*#*#*#*#*#*##*####*#*#*#*#*",
-        "###*#*#*#*#*#*#*##*####*#*#*#*#*",
+        "###*#*#*#*#*#*#*##*####*#*#*#S#*",
         "###*#*#*#*#*#*#*##******#*#*###*",
         "###*#*#*#*#*#*#*#######*#*#*###*",
         "###*#*#S#*#*#*#*********#*#*###*",
@@ -248,17 +248,18 @@ inline void AStarMatrix::ToFile() {
 #ifdef _WIN32
         return std::system("python ..\\AStar\\Draw.py");
 #elif _LINUX
-            return std::system("python3 ..\\AStar\\Draw.py");
+        return std::system("python3 ..\\AStar\\Draw.py");
 #else
-                LogManagement::GetInstance()->Error("Unsupported platform", "AStarMatrix");
+        LogManagement::GetInstance()->Error("Unsupported platform", "AStarMatrix");
+        return -1;
 #endif
     });
-    std::cout << "Éú³ÉÃÔ¹¬Í¼ÏñÖÐ>>>" << std::endl;
+    std::cout << "Drawing maze fig>>>" << std::endl;
     int pyResult = future.get();
     if (pyResult != 0) {
-        LogManagement::GetInstance()->Error("Python½Å±¾Ö´ÐÐ´íÎó", "AStarMatrix");
+        LogManagement::GetInstance()->Error("Python script running error", "AStarMatrix");
     }
-    std::cout << "ÃÔ¹¬Í¼ÏñÉú³ÉÍê±Ï:" << std::endl;
+    std::cout << "Maze figure generated!" << std::endl;
 
 
     outfile.close();

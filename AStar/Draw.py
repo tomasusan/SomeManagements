@@ -46,11 +46,11 @@ plt.imshow(maze, cmap='gray_r')  # 黑墙白路
 colors = ['red', 'blue', 'green', 'orange', 'purple', 'cyan', 'magenta']
 
 # 绘制每一条路径
-for idx, path in enumerate(paths):
+for idx, path in reversed(list(enumerate(paths))):
     y, x = zip(*path)
-    plt.plot(x, y, color=colors[idx % len(colors)], linewidth=2, label=f'Path {idx+1}')
-    # 只绘制路径的起点
+    plt.plot(x, y, color=colors[idx % len(colors)], linewidth=3, label=f'Path {idx+1}')
     plt.scatter(x[0], y[0], color='lime', s=80, edgecolors='black', zorder=5)
+
 
 # 绘制所有起点(S)与终点(E)
 for (y, x) in start_points:
@@ -62,7 +62,7 @@ plt.legend(loc='upper right', fontsize=8)
 plt.axis('off')
 
 save_path = "..\\AStar\\MazeWithPaths.png"
-plt.savefig(save_path, bbox_inches='tight', pad_inches=0, dpi=300)
+plt.savefig(save_path, bbox_inches='tight', pad_inches=0, dpi=100)
 plt.close();
 
-print(f"✅ 绘制完成，已保存到：{save_path}")
+print(f"✅ Maze draw finished, saved to：{save_path}")
