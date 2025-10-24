@@ -9,6 +9,7 @@ add_executable(EventManagement main.cpp
         ${PRIVATE_SOURCES}
         OtherTask/DrawDiagram.cpp
         OtherTask/DrawDiagram.h
+        OtherTask/c.cpp
 )
 
 target_include_directories(EventManagement
